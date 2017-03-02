@@ -2,88 +2,170 @@
 //  GameScene.swift
 //  SpaceShooter
 //
-//  Created by newschool on 2/6/17.
-//  Copyright © 2017 newschool. All rights reserved.
-//
+//  Created by YuryG on 2/6/17.
 
 import SpriteKit
 import GameplayKit
 
-class GameScene: SKScene {
+
+class GameScene: SKScene, SKPhysicsContactDelegate {
+    // "global to object"
+    var score = 0
+    let winningScore = 2000
+    var bestScore = 0
     
-    private var label : SKLabelNode?
-    private var spinnyNode : SKShapeNode?
+    let bubbleSize: CGFloat = 15.0
+    let bubbleSpeed = 500
     
+    //properties, define must "?"
+    var player: SKSpriteNode?  //optional, "nil"
+    var enemy: SKSpriteNode? //
+    var laser: SKShapeNode?
+    var label : SKLabelNode?
+    
+    // Setup, first thing to get called. App called.
     override func didMove(to view: SKView) {
+        self.physicsWorld.contactDelegate = self
+        print("Hello I'm in didMove to view")  //"format a string"
+
+        // as is "casting"
+        player = self.childNode(withName: "player") as! SKSpriteNode?
+        enemy = self.childNode(withName: "squid") as! SKSpriteNode?
+        label = self.childNode(withName: "myLabel") as! SKLabelNode?
+
         
-        // Get label node from scene and store it for use later
-        self.label = self.childNode(withName: "//helloLabel") as? SKLabelNode
-        if let label = self.label {
-            label.alpha = 0.0
-            label.run(SKAction.fadeIn(withDuration: 2.0))
-        }
+//        makeLaser()
+       makeBubble()
+        updateLabel()
+    }
+    
+   
+//    
+//    func makeLaser(){
+//        laser = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 20, height: 20))
+//        laser?.fillColor = UIColor.red
+//        laser?.position = (player?.position)!
+//        
+//        laser?.physicsBody = SKPhysicsBody(rectangleOf: (laser?.frame.size)!)
+//        laser?.physicsBody?.affectedByGravity = false
+//        laser?.physicsBody?.velocity = CGVector(dx: 100, dy: 800)
+//        laser?.physicsBody?.contactTestBitMask = 5
+//        
+//        self.addChild(laser!)
+//
+//    }
+
+    
+    func makeBubble(){
+        laser = SKShapeNode(circleOfRadius: bubbleSize)
         
-        // Create shape node to use during mouse interaction
-        let w = (self.size.width + self.size.height) * 0.05
-        self.spinnyNode = SKShapeNode.init(rectOf: CGSize.init(width: w, height: w), cornerRadius: w * 0.3)
+        laser?.strokeColor = UIColor.green
+        laser?.fillColor = UIColor.red
         
-        if let spinnyNode = self.spinnyNode {
-            spinnyNode.lineWidth = 2.5
-            
-            spinnyNode.run(SKAction.repeatForever(SKAction.rotate(byAngle: CGFloat(M_PI), duration: 1)))
-            spinnyNode.run(SKAction.sequence([SKAction.wait(forDuration: 0.5),
-                                              SKAction.fadeOut(withDuration: 0.5),
-                                              SKAction.removeFromParent()]))
-        }
-    }
+        laser?.position = (player?.position)!
+        
+        laser?.physicsBody = SKPhysicsBody(rectangleOf: (laser?.frame.size)!)
+        laser?.physicsBody?.affectedByGravity = false
+        laser?.physicsBody?.velocity = CGVector(dx: 0, dy: bubbleSpeed)
+        laser?.physicsBody?.contactTestBitMask = 5
+        
+        self.addChild(laser!)}
     
     
-    func touchDown(atPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.green
-            self.addChild(n)
-        }
-    }
     
-    func touchMoved(toPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.blue
-            self.addChild(n)
-        }
-    }
-    
-    func touchUp(atPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.red
-            self.addChild(n)
-        }
-    }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if let label = self.label {
-            label.run(SKAction.init(named: "Pulse")!, withKey: "fadeInOut")
+        print("touches began")
+        
+//        makeLaser()
+      makeBubble()
+        
+        for  t in touches {
+            print("t= \(t.location(in: self))")
+
+            player?.position.x = t.location(in: self).x
+        
         }
         
-        for t in touches { self.touchDown(atPoint: t.location(in: self)) }
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for t in touches { self.touchMoved(toPoint: t.location(in: self)) }
+        print("touches moved")
+        
+        
+        for  t in touches {
+            // print out where the finger touched
+            print("t= \(t.location(in: self))")
+            
+            // move player's X position to that point.
+            player?.position.x = t.location(in: self).x
+
+//            makeLaser()
+            makeBubble()
+            
+        }
     }
+    
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for t in touches { self.touchUp(atPoint: t.location(in: self)) }
+        print("touches ended")
+        
+        
+        for  t in touches {
+            // print out where the finger touched
+            print("t= \(t.location(in: self))")
+            
+            // move player's X position to that point.
+            player?.position.x = t.location(in: self).x
+//            makeLaser()
+            
+            makeBubble()
+            
+        }
+
     }
     
-    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for t in touches { self.touchUp(atPoint: t.location(in: self)) }
-    }
     
     
-    override func update(_ currentTime: TimeInterval) {
-        // Called before each frame is rendered
+    
+    func updateLabel(){
+        label?.text = "AJ Cyborg: \(score) "
+        
+        if score >= winningScore{
+            label?.text = "AJ; You Have Won! "
+
+        }
+        
     }
+    
+    func didBegin(_ contact: SKPhysicsContact) {
+       // print("we have contact btw \(contact.bodyA) \(contact.bodyB)")
+       
+        if (contact.bodyA.contactTestBitMask == 5){
+        score = score + 1
+        updateLabel()
+            contact.bodyA.node?.removeFromParent()
+     
+            
+            }
+        
+        if (contact.bodyB.contactTestBitMask == 5){
+            score = score + 1
+            updateLabel()
+            
+           
+        }
+        
+        if ((contact.bodyA.contactTestBitMask == 5) || (contact.bodyA.contactTestBitMask == 5)){
+
+            
+        }
+        
+        if ((contact.bodyB.contactTestBitMask == 5) || (contact.bodyB.contactTestBitMask == 5)){
+
+        }
+        
+        
+        }
+
 }

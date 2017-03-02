@@ -2,8 +2,7 @@
 //  GameViewController.swift
 //  SpaceShooter
 //
-//  Created by newschool on 2/6/17.
-//  Copyright © 2017 newschool. All rights reserved.
+//  Created by YuryG on 2/6/17.
 //
 
 import UIKit
